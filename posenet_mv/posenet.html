@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
+    <title>Document</title>
+    <style>
+        .box {
+            width: 100px;
+            height: 100px;
+            border: 1px solid black; /* 테두리 */
+            background-color: blue; /* 배경색 */
+            position: absolute;
+            top: 500px;
+            left: 300px;
+        }
+
+        #boxWrap {
+            width: 100%;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <video id="video" width="640" height="480" autoplay style="display : none"></video>
+    <canvas id="canvas" width="640" height="480"></canvas>
+    <div id="boxWrap">
+        <div id="box" class="box"></div>
+    </div>
+    
+
+    <script src="camera.js"></script>
+</body>
+</html>
