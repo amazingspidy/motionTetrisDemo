@@ -55,7 +55,7 @@ const detectPoseInRealTime = async (video, net) => {
                 const leftArmAngle = calculateAngle(leftShoulder.position, leftElbow.position, leftWrist.position);
                 const rightArmAngle = calculateAngle(rightShoulder.position, rightElbow.position, rightWrist.position);
                 const eyeAvg = (rightEye.position.y + leftEye.position.y) / 2;
-                const isRightHandRaised = rightWrist.position.y < eyeAvg - 200;
+                const isRightHandRaised = rightWrist.position.y < eyeAvg - 100;
                 console.log(isRightHandRaised)
                 if (isRightHandRaised && !isRightHandRaisedPreviously) {
                   rotateBox(30);
