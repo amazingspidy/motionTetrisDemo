@@ -41,31 +41,53 @@
         height: 100%;
         overflow: hidden;
       }
+      #webcam,
+      #canvas {
+        transform: scaleX(-1);
+        position: absolute;
+        top: 0;
+        right: 0;
+      }
+
+      #leftAngle {
+        position: absolute;
+        top: 500px;
+        right: 420px;
+        font-size: 24px;
+        color: red;
+      }
+
+      #rightAngle {
+        position: absolute;
+        top: 500px;
+        right: 20px;
+        font-size: 24px;
+        color: blue;
+      }
+
+      #leftWristX {
+        position: absolute;
+        top: 550px;
+        right: 420px;
+        font-size: 24px;
+        color: green;
+      }
+
+      #rightWristX {
+        position: absolute;
+        top: 550px;
+        right: 20px;
+        font-size: 24px;
+        color: purple;
+      }
     </style>
   </head>
   <body>
     <button id="createBlockBtn">Create Block</button>
-    <video id="webcam" autoplay playsinline></video>
-    <!-- 캔버스에 인라인 스타일 적용 -->
+    <!-- 웹캠 비디오를 담을 video 태그를 추가합니다 -->
     <canvas id="viewport"></canvas>
 
     <script src="../PhysicsJS-0.7.0/PhysicsJS-0.7.0/dist/physicsjs-full.js"></script>
     <script src="../dist/bundle.js"></script>
-
-    <script>
-      // 비디오 스트림을 가져오는 함수
-      async function getVideo() {
-        const video = document.querySelector("#webcam");
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-          });
-          video.srcObject = stream;
-        } catch (err) {
-          console.error("Error: " + err);
-        }
-      }
-      getVideo();
-    </script>
   </body>
 </html>

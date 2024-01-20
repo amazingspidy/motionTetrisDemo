@@ -246,7 +246,7 @@ Physics(function (world) {
       const randomType = Math.floor(Math.random() * 7) + 1;
       activeBlock = createTetrisBlock(randomType, mapWidth / 2, blockSize * 2); // 블록 생성 위치 조정
     }
-  }, 5000); // 5초마다 블록 생성
+  }, 5000); // 3초마다 블록 생성
   // 테트리스 블록 모양 정의
   const tetrisShapes = {
     1: [
@@ -322,8 +322,8 @@ Physics(function (world) {
         height: 10,
         treatment: "static",
         label: "바닥",
-        restitution: 0.3, // 반발력 설정
-        cof: 0.1, // 마찰 계수 감소
+        restitution: 0.3, // 반발력 감소
+        cof: 0.3, // 마찰 계수 감소
       }),
       Physics.body("rectangle", {
         // 좌측 벽
@@ -333,8 +333,8 @@ Physics(function (world) {
         height: mapHeight,
         treatment: "static",
         label: "좌측 벽",
-        // restitution: 0.2, // 반발력 설정
-        cof: 0.1, // 마찰 계수 감소
+        restitution: 0.3, // 반발력 감소
+        cof: 0.3, // 마찰 계수 감소
       }),
       Physics.body("rectangle", {
         // 우측 벽
@@ -486,10 +486,10 @@ Physics(function (world) {
         activeBlock.applyForce(Physics.vector(0.02, 0));
         break;
       case "z": // 회전 (반시계 방향)
-        rotateCompound(activeBlock, -Math.PI / 1600); // 숫자 늘릴수록 적게 회전전
+        rotateCompound(activeBlock, -Math.PI / 1280); // 숫자 늘릴수록 적게 회전전
         break;
       case "x": // 회전 (시계 방향)
-        rotateCompound(activeBlock, Math.PI / 1600);
+        rotateCompound(activeBlock, Math.PI / 1280);
         break;
     }
     // 물리 시뮬레이션
