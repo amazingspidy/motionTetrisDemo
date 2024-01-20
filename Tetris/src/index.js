@@ -8,7 +8,6 @@ document.addEventListener("DOMContentLoaded", (event) => {
 });
 
 
-
 async function setupWebcam() {
   const video = document.getElementById('webcam');
   const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -20,8 +19,6 @@ async function setupWebcam() {
     };
   });
 }
-
-
 
 
 const mapWidth = 392;
@@ -318,145 +315,154 @@ Physics(function (world) {
   });
 
   
-async function runPosenet() {
-  const net = await posenet.load();
-  const video = await setupWebcam();
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
+  async function runPosenet() {
+    const net = await posenet.load();
+    const video = await setupWebcam();
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
 
-  //이전 지점들과 각도를 저장하는 변수
-  let prevLeftAngle = 0;
-  let prevRightAngle = 0;
-  let prevLeftWristX = 0;
-  let prevRightWristX = 0;
-  let squareElement = document.getElementById('square');
-  //현재 도형의 회전된각
-  let rotateDegree = 0;
-  
-
-
-  setInterval(async () => {
-    const pose = await net.estimateSinglePose(video, {
-      flipHorizontal: false,
-      decodingMethod: 'single-person'
-    });
-
-    // 캔버스를 지우고 새로 그립니다.
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    pose.keypoints.forEach(keypoint => {
-      if (['leftShoulder', 'rightShoulder', 'leftElbow', 'rightElbow', 'leftWrist', 'rightWrist', 'nose'].includes(keypoint.part)) {
-        ctx.beginPath();
-        ctx.arc(keypoint.position.x, keypoint.position.y, 5, 0, 2 * Math.PI);
-        ctx.fillStyle = 'red';
-        ctx.fill();
-      }
-    });
-
-    // shoulder, elbow, wrist의 위치를 찾고, 내적을통해 사이각을 구함.
-    // 왼쪽 각도 계산산
-    let leftShoulder = pose.keypoints.find(keypoint => keypoint.part === 'leftShoulder').position;
-    let leftElbow = pose.keypoints.find(keypoint => keypoint.part === 'leftElbow').position;
-    let leftWrist = pose.keypoints.find(keypoint => keypoint.part === 'leftWrist').position;
-
-    let vectorA = { x: leftShoulder.x - leftElbow.x, y: leftShoulder.y - leftElbow.y };
-    let vectorB = { x: leftWrist.x - leftElbow.x, y: leftWrist.y - leftElbow.y };
-
-    let leftDotProduct = vectorA.x * vectorB.x + vectorA.y * vectorB.y;
-    let leftMagnitudeA = Math.sqrt(vectorA.x * vectorA.x + vectorA.y * vectorA.y);
-    let leftMagnitudeB = Math.sqrt(vectorB.x * vectorB.x + vectorB.y * vectorB.y);
-
-    let leftAngleInRadians = Math.acos(leftDotProduct / (leftMagnitudeA * leftMagnitudeB));
-    let leftAngleInDegrees = leftAngleInRadians * (180 / Math.PI);
-
-    let leftWristX = leftWrist.x;
-
-    // 오른쪽 각도 계산
-    let rightShoulder = pose.keypoints.find(keypoint => keypoint.part === 'rightShoulder').position;
-    let rightElbow = pose.keypoints.find(keypoint => keypoint.part === 'rightElbow').position;
-    let rightWrist = pose.keypoints.find(keypoint => keypoint.part === 'rightWrist').position;
-
-    vectorA = { x: rightShoulder.x - rightElbow.x, y: rightShoulder.y - rightElbow.y };
-    vectorB = { x: rightWrist.x - rightElbow.x, y: rightWrist.y - rightElbow.y };
-
-    let rightDotProduct = vectorA.x * vectorB.x + vectorA.y * vectorB.y;
-    let rightMagnitudeA = Math.sqrt(vectorA.x * vectorA.x + vectorA.y * vectorA.y);
-    let rightMagnitudeB = Math.sqrt(vectorB.x * vectorB.x + vectorB.y * vectorB.y);
-
-    let rightAngleInRadians = Math.acos(rightDotProduct / (rightMagnitudeA * rightMagnitudeB));
-    let rightAngleInDegrees = rightAngleInRadians * (180 / Math.PI);
-
-    let rightWristX = rightWrist.x;
-
-    //각도의 변화값. (이전 각도와의 차이)
-    let leftAngleDelta = leftAngleInDegrees - prevLeftAngle;
-    let rightAngleDelta = rightAngleInDegrees - prevRightAngle;
-
-    let eventElement = document.getElementById('event');
-
-    if (leftAngleDelta > rightAngleDelta) {
-      if (leftAngleDelta > 35 && leftAngleInDegrees > prevLeftAngle && leftWristX > prevLeftWristX) {
-        eventElement.textContent = '왼쪽 회전';
-        // rotateDegree -= 30;  // 30도 좌측회전
-        rotateCompound(activeBlock, -Math.PI / 1280); // 숫자 늘릴수록 적게 회전전
-      }
-      else {
-        eventElement.textContent = '유지';
-      }
-    }
-
-
-    else {
-      if (rightAngleDelta > 35 && rightAngleInDegrees > prevRightAngle && rightWristX < prevRightWristX) {
-        eventElement.textContent = '오른쪽 회전';
-        //rotateDegree += 30;  // 30도 우측회전
-        rotateCompound(activeBlock, Math.PI / 1280);
-
-      }
-      else {
-        eventElement.textContent = '유지';
-      }
-    }
-
-    // 블록은 코를 인식하여 따라갑니다.
-    let nose = pose.keypoints.find(keypoint => keypoint.part === 'nose').position;
-
-    let noseXFlipped = 640 - nose.x;  //좌우반전으로 인함.
-
-    // squareElement.style.left = `${noseXFlipped}px`;
-    // //squareElement.style.top = `${noseY}px`;
-
-    // squareY += 30;  // 블록이 천천히 내려가도록 y좌표를 증가시킵니다.
-    // if (squareY > 640) {  // 만약 블록이 화면 밖으로 벗어나면
-    //   squareY = 0;  // 다시 화면 맨 위로 되돌립니다.
-    // }
-    // squareElement.style.top = `${squareY}px`;
-
-    // squareElement.style.transform = `rotate(${rotateDegree}deg)`;
-
+    //이전 지점들과 각도를 저장하는 변수
+    let prevLeftAngle = 0;
+    let prevRightAngle = 0;
+    let prevLeftWristX = 0;
+    let prevRightWristX = 0;
+    let squareElement = document.getElementById('square');
+    //현재 도형의 회전된각
+    let rotateDegree = 0;
     
-    
-    // 현재 각도와 wrist x좌표를 이전 값으로 저장
-    prevLeftAngle = leftAngleInDegrees;
-    prevRightAngle = rightAngleInDegrees;
-    prevRightWristX = rightWristX;
-    prevLeftWristX = leftWristX;
 
-    let leftAngleElement = document.getElementById('leftAngle');
-    leftAngleElement.textContent = `Left Angle: ${leftAngleInDegrees.toFixed(2)} degrees`;
 
-    let rightAngleElement = document.getElementById('rightAngle');
-    rightAngleElement.textContent = `Right Angle: ${rightAngleInDegrees.toFixed(2)} degrees`;
+    setInterval(async () => {
+      const pose = await net.estimateSinglePose(video, {
+        flipHorizontal: false,
+        decodingMethod: 'single-person'
+      });
 
-    let leftWristXElement = document.getElementById('leftWristX');
-    leftWristXElement.textContent = `Left Wrist X: ${leftWrist.x.toFixed(2)}`;
+      // 캔버스를 지우고 새로 그립니다.
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    let rightWristXElement = document.getElementById('rightWristX');
-    rightWristXElement.textContent = `Right Wrist X: ${rightWrist.x.toFixed(2)}`;
+      pose.keypoints.forEach(keypoint => {
+        if (['leftShoulder', 'rightShoulder', 'leftElbow', 'rightElbow', 'leftWrist', 'rightWrist', 'nose'].includes(keypoint.part)) {
+          ctx.beginPath();
+          ctx.arc(keypoint.position.x, keypoint.position.y, 5, 0, 2 * Math.PI);
+          if (keypoint.part === 'nose') {
+            ctx.fillStyle = 'blue';
+          } else {
+            ctx.fillStyle = 'red';
+          }
+          ctx.fill();
+        }
+      });
 
-  }, 250);
-}
-runPosenet();
+      // shoulder, elbow, wrist의 위치를 찾고, 내적을통해 사이각을 구함.
+      // 왼쪽 각도 계산산
+      let leftShoulder = pose.keypoints.find(keypoint => keypoint.part === 'leftShoulder').position;
+      let leftElbow = pose.keypoints.find(keypoint => keypoint.part === 'leftElbow').position;
+      let leftWrist = pose.keypoints.find(keypoint => keypoint.part === 'leftWrist').position;
+
+      let vectorA = { x: leftShoulder.x - leftElbow.x, y: leftShoulder.y - leftElbow.y };
+      let vectorB = { x: leftWrist.x - leftElbow.x, y: leftWrist.y - leftElbow.y };
+
+      let leftDotProduct = vectorA.x * vectorB.x + vectorA.y * vectorB.y;
+      let leftMagnitudeA = Math.sqrt(vectorA.x * vectorA.x + vectorA.y * vectorA.y);
+      let leftMagnitudeB = Math.sqrt(vectorB.x * vectorB.x + vectorB.y * vectorB.y);
+
+      let leftAngleInRadians = Math.acos(leftDotProduct / (leftMagnitudeA * leftMagnitudeB));
+      let leftAngleInDegrees = leftAngleInRadians * (180 / Math.PI);
+
+      let leftWristX = leftWrist.x;
+
+      // 오른쪽 각도 계산
+      let rightShoulder = pose.keypoints.find(keypoint => keypoint.part === 'rightShoulder').position;
+      let rightElbow = pose.keypoints.find(keypoint => keypoint.part === 'rightElbow').position;
+      let rightWrist = pose.keypoints.find(keypoint => keypoint.part === 'rightWrist').position;
+
+      vectorA = { x: rightShoulder.x - rightElbow.x, y: rightShoulder.y - rightElbow.y };
+      vectorB = { x: rightWrist.x - rightElbow.x, y: rightWrist.y - rightElbow.y };
+
+      let rightDotProduct = vectorA.x * vectorB.x + vectorA.y * vectorB.y;
+      let rightMagnitudeA = Math.sqrt(vectorA.x * vectorA.x + vectorA.y * vectorA.y);
+      let rightMagnitudeB = Math.sqrt(vectorB.x * vectorB.x + vectorB.y * vectorB.y);
+
+      let rightAngleInRadians = Math.acos(rightDotProduct / (rightMagnitudeA * rightMagnitudeB));
+      let rightAngleInDegrees = rightAngleInRadians * (180 / Math.PI);
+
+      let rightWristX = rightWrist.x;
+
+      //각도의 변화값. (이전 각도와의 차이)
+      let leftAngleDelta = leftAngleInDegrees - prevLeftAngle;
+      let rightAngleDelta = rightAngleInDegrees - prevRightAngle;
+
+      let eventElement = document.getElementById('event');
+
+      if (leftAngleDelta > rightAngleDelta) {
+        if (activeBlock && leftAngleDelta > 35 && leftAngleInDegrees > prevLeftAngle && leftWristX > prevLeftWristX) {
+          eventElement.textContent = '왼쪽 회전';
+          
+          rotateCompound(activeBlock, -Math.PI / 1280); // 숫자 늘릴수록 적게 회전전
+        }
+        else {
+          eventElement.textContent = '유지';
+        }
+      }
+
+
+      else {
+        if (activeBlock && rightAngleDelta > 35 && rightAngleInDegrees > prevRightAngle && rightWristX < prevRightWristX) {
+          eventElement.textContent = '오른쪽 회전';
+          
+          rotateCompound(activeBlock, Math.PI / 1280);
+
+        }
+        else {
+          eventElement.textContent = '유지';
+        }
+      }
+
+      // 블록은 코를 인식하여 따라갑니다.
+      let nose = pose.keypoints.find(keypoint => keypoint.part === 'nose').position;
+      let noseX = nose.x;
+      let noseElement = document.getElementById('nose');
+      noseElement.textContent = `Nose: ${noseX.toFixed(2)}`;
+
+      let reversedNoseX = 640 - noseX;
+      let normalizedNoseX = 0;
+      if (reversedNoseX > 160) {
+        if (reversedNoseX < 480) {
+          normalizedNoseX = reversedNoseX - 160;
+        }
+        else{
+          normalizedNoseX = 320
+        }
+
+      } 
+      // 현재 이부분은 민감도로 인해 주석처리함.
+      // if (activeBlock) {
+      //   activeBlock.state.pos.set(((normalizedNoseX) / 320) * 392, activeBlock.state.pos.y);
+      // }
+      // console.log(((normalizedNoseX) / 320) * 392)
+      
+      
+      // 현재 각도와 wrist x좌표를 이전 값으로 저장
+      prevLeftAngle = leftAngleInDegrees;
+      prevRightAngle = rightAngleInDegrees;
+      prevRightWristX = rightWristX;
+      prevLeftWristX = leftWristX;
+
+      let leftAngleElement = document.getElementById('leftAngle');
+      leftAngleElement.textContent = `Left Angle: ${leftAngleInDegrees.toFixed(2)} degrees`;
+
+      let rightAngleElement = document.getElementById('rightAngle');
+      rightAngleElement.textContent = `Right Angle: ${rightAngleInDegrees.toFixed(2)} degrees`;
+
+      let leftWristXElement = document.getElementById('leftWristX');
+      leftWristXElement.textContent = `Left Wrist X: ${leftWrist.x.toFixed(2)}`;
+
+      let rightWristXElement = document.getElementById('rightWristX');
+      rightWristXElement.textContent = `Right Wrist X: ${rightWrist.x.toFixed(2)}`;
+    }, 250);
+  }
+  runPosenet();
 
 
 });
