@@ -1,21 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
+
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tetris Physics</title>
+    
+    <video id="webcam" autoplay width="640" height="480"></video>
+    <canvas id="canvas" width="640" height="480"></canvas>
+    <div id="event"
+    style="position: absolute; top: 60px; left: 50%; transform: translateX(-50%); font-size: 36px; color: orange;">
+    </div>
+
+    <div id="leftAngle"></div>
+    <div id="rightAngle"></div>
+    <div id="leftWristX"></div>
+    <div id="rightWristX"></div>
+    <div id="square"></div>
+    <style>
+      #viewport {
+        position: absolute;
+        z-index : 1;
+        border: 1px solid black;
+      }
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+      }
+      #webcam,
+      #canvas {
+        transform: scaleX(-1);
+        position: absolute;
+        top: 0;
+        right: 0;
+      }
+
+      #leftAngle {
+      position: absolute;
+      top: 500px;
+      right: 420px;
+      font-size: 24px;
+      color: red;
+    }
+
+    #rightAngle {
+      position: absolute;
+      top: 500px;
+      right: 20px;
+      font-size: 24px;
+      color: blue;
+    }
+
+    #leftWristX {
+      position: absolute;
+      top: 550px;
+      right: 420px;
+      font-size: 24px;
+      color: green;
+    }
+
+    #rightWristX {
+      position: absolute;
+      top: 550px;
+      right: 20px;
+      font-size: 24px;
+      color: purple;
+    }
+
+
+    </style>
   </head>
   <body>
     <button id="createBlockBtn">Create Block</button>
-    <canvas
-      id="viewport"
-      width="392"
-      height="798"
-      style="border: 1px solid black"
-    ></canvas>
+    <!-- 웹캠 비디오를 담을 video 태그를 추가합니다 -->
+    <canvas id="viewport"></canvas>
 
     <script src="../PhysicsJS-0.7.0/PhysicsJS-0.7.0/dist/physicsjs-full.js"></script>
     <script src="../dist/bundle.js"></script>
+
+    
   </body>
 </html>
