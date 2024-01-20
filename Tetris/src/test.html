@@ -1,24 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
+
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tetris Physics</title>
-    <style>
-      #webcam {
+
+    <video id="webcam" autoplay width="640" height="480"></video>
+    <canvas id="canvas" width="640" height="480"></canvas>
+    <div
+      id="event"
+      style="
         position: absolute;
-        right: 10px;
-        width: 300px;
-        height: auto;
-        z-index: 2;
-      }
+        top: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 36px;
+        color: orange;
+      "
+    ></div>
+
+    <div id="leftAngle"></div>
+    <div id="rightAngle"></div>
+    <div id="leftWristX"></div>
+    <div id="rightWristX"></div>
+    <div id="square"></div>
+    <style>
       #viewport {
         position: absolute;
-        z-index: 1; /* 캔버스를 웹캠 아래에 띄움 */
+        z-index: 1;
         border: 1px solid black;
       }
-      /* 추가된 스타일 */
       body,
       html {
         margin: 0;
