@@ -56,24 +56,34 @@
 
     // 마우스 클릭 이벤트
     Matter.Events.on(mouseConstraint, 'mousedown', (event) => {
-        console.log(compoundBody);
-        const x = compoundBody.position.x;
-        const y = compoundBody.position.y;
-        World.remove(engine.world, compoundBody); // 기존의 복합체 제거
+      World.remove(engine.world, compoundBody); // 기존의 복합체 제거
+            // 반으로 나눈 폴리곤 두 개 생성
+            const halfWidth = 40;
+      const vertices1 = [
+        { x: compoundBody.position.x - halfWidth, y: compoundBody.position.y - 40 },
+        { x: compoundBody.position.x, y: compoundBody.position.y - 40 },
+        { x: compoundBody.position.x, y: compoundBody.position.y + 40 },
+        { x: compoundBody.position.x - halfWidth, y: compoundBody.position.y + 40 },
+      ];
+      const vertices2 = [
+        { x: compoundBody.position.x, y: compoundBody.position.y - 40 },
+        { x: compoundBody.position.x + halfWidth, y: compoundBody.position.y - 40 },
+        { x: compoundBody.position.x + halfWidth, y: compoundBody.position.y + 40 },
+        { x: compoundBody.position.x, y: compoundBody.position.y + 40 },
+      ];
+      const body1 = Bodies.fromVertices(compoundBody.position.x - halfWidth / 2, compoundBody.position.y, vertices1, {
+        render: { fillStyle: 'blue' }
+      });
+      const body2 = Bodies.fromVertices(compoundBody.position.x + halfWidth / 2, compoundBody.position.y, vertices2, {
+        render: { fillStyle: 'blue' }
+      });
       
-      // 반으로 나눈 사각형 두 개 생성
-      const halfWidth = 80 / 2;
-      const body1 = Bodies.rectangle(x - 20, y, halfWidth, 80, {
-        render: { fillStyle: 'blue' }
-      });
-      const body2 = Bodies.rectangle(x + 20, y, halfWidth, 80, {
-        render: { fillStyle: 'blue' }
-      });
       console.log(body1, body2);
+      
       // 세계에 추가
       World.add(engine.world, [body1, body2]);
     });
+    
     Engine.run(engine);
   </script>
 </body>
-</html>
