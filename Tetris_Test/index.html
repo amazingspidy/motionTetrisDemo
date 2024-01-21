@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matter.js Polygon Cutting Example</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.17.1/matter.min.js"></script>
+</head>
+<body>
+  <script>
+    const Engine = Matter.Engine,
+          Render = Matter.Render,
+          World = Matter.World,
+          Bodies = Matter.Bodies,
+          Vertices = Matter.Vertices,
+          Bounds = Matter.Bounds,
+          Vector = Matter.Vector;
+    const engine = Engine.create();
+    const render = Render.create({
+      element: document.body,
+      engine: engine
+    });
+
+    Render.run(render);
+
+    const mouse = Matter.Mouse.create(render.canvas),
+          mouseConstraint = Matter.MouseConstraint.create(engine, {
+            mouse: mouse
+          });
+
+    World.add(engine.world, mouseConstraint);
+
+    // 여러 폴리곤을 가진 복합체 생성
+    const compoundBody = Bodies.fromVertices(200, 200, [
+      { x: 0, y: 0 },
+      { x: 80, y: 0 },
+      { x: 80, y: 80 },
+      { x: 0, y: 80 }
+    ], {
+      isStatic: false,
+      render: {
+        fillStyle: 'blue'
+      }
+    });
+
+    // 벽 생성
+    const wall = Bodies.rectangle(400, 400, 800, 20, {
+      isStatic: true,
+      render: {
+        fillStyle: 'gray'
+      }
+    });
+
+    // 복합체와 벽을 세계에 추가
+    World.add(engine.world, [compoundBody, wall]);
+
+    // 마우스 클릭 이벤트
+    Matter.Events.on(mouseConstraint, 'mousedown', (event) => {
+        console.log(compoundBody);
+        const x = compoundBody.position.x;
+        const y = compoundBody.position.y;
+        World.remove(engine.world, compoundBody); // 기존의 복합체 제거
+      
+      // 반으로 나눈 사각형 두 개 생성
+      const halfWidth = 80 / 2;
+      const body1 = Bodies.rectangle(x - 20, y, halfWidth, 80, {
+        render: { fillStyle: 'blue' }
+      });
+      const body2 = Bodies.rectangle(x + 20, y, halfWidth, 80, {
+        render: { fillStyle: 'blue' }
+      });
+      console.log(body1, body2);
+      // 세계에 추가
+      World.add(engine.world, [body1, body2]);
+    });
+    Engine.run(engine);
+  </script>
+</body>
+</html>
