@@ -80,7 +80,17 @@
                 { x: compoundBody.position.x + halfWidth, y: compoundBody.position.y + halfWidth },
                 { x: compoundBody.position.x, y: compoundBody.position.y + halfWidth },
             ];
-            const body1 = Bodies.fromVertices(compoundBody.position.x - halfWidth / 2, compoundBody.position.y, vertices1, {
+
+            const centre = { x: 0.0, y: 0.0 };
+            for (let vert of vertices1) {
+                centre.x += vert.x;
+                centre.y += vert.y;
+            }
+
+            centre.x /= vertices1.length;
+            centre.y /= vertices1.length;
+            console.log(centre);
+            const body1 = Bodies.fromVertices(centre.x, centre.y, vertices1, {
                 render: { fillStyle: 'blue' }
             });
             const body2 = Bodies.fromVertices(compoundBody.position.x + halfWidth / 2, compoundBody.position.y, vertices2, {
@@ -88,7 +98,7 @@
             });
 
             console.log(body1, body2);
-
+            delete compoundBody;
             // 세계에 추가
             World.add(engine.world, [body1, body2]);
         });
