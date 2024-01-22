@@ -3,7 +3,7 @@ import Physics from "physicsjs";
 // 캔버스 크기 설정
 document.addEventListener("DOMContentLoaded", (event) => {
   const canvas = document.getElementById("viewport");
-  canvas.width = 392;
+  canvas.width = 600;
   canvas.height = 798;
 });
 
@@ -21,7 +21,7 @@ async function setupWebcam() {
 }
 
 
-const mapWidth = 392;
+const mapWidth = 600;
 const mapHeight = 798;
 const blockSize = 32;
 
@@ -38,7 +38,7 @@ Physics(function (world) {
 
   world.add(renderer);
   world.add(
-    Physics.behavior("constant-acceleration", { acc: { x: 0, y: 0.0001 } })
+    Physics.behavior("constant-acceleration", { acc: { x: 0, y: 0.00005 } })
   ); // 중력 가속도 조정
   world.add(Physics.behavior("body-impulse-response"));
   world.add(Physics.behavior("body-collision-detection"));
@@ -426,21 +426,23 @@ Physics(function (world) {
       noseElement.textContent = `Nose: ${noseX.toFixed(2)}`;
 
       let reversedNoseX = 640 - noseX;
-      let normalizedNoseX = 0;
-      if (reversedNoseX > 160) {
-        if (reversedNoseX < 480) {
-          normalizedNoseX = reversedNoseX - 160;
-        }
-        else{
-          normalizedNoseX = 320
-        }
+      let forceX = 0;
+      let absoluteValue = 0;
 
-      } 
-      // 현재 이부분은 민감도로 인해 주석처리함.
-      // if (activeBlock) {
-      //   activeBlock.state.pos.set(((normalizedNoseX) / 320) * 392, activeBlock.state.pos.y);
-      // }
-      // console.log(((normalizedNoseX) / 320) * 392)
+      //현재 이부분은 민감도로 인해 주석처리함.
+      if (activeBlock) {
+        absoluteValue = Math.abs(reversedNoseX-320);
+        forceX = (absoluteValue/320) * 0.04;
+        if (reversedNoseX > 320) {
+          activeBlock.applyForce(Physics.vector(forceX, 0));
+          console.log(forceX);
+        }
+        else {
+          activeBlock.applyForce(Physics.vector(-forceX, 0));
+          console.log(-forceX);
+        }
+      }
+      
       
       
       // 현재 각도와 wrist x좌표를 이전 값으로 저장
@@ -461,7 +463,7 @@ Physics(function (world) {
       let rightWristXElement = document.getElementById('rightWristX');
       rightWristXElement.textContent = `Right Wrist X: ${rightWrist.x.toFixed(2)}`;
     }, 250);
-  }
+  } 
   runPosenet();
 
 
