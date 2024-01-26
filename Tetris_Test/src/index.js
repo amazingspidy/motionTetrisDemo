@@ -73,26 +73,78 @@ for (let i = 1; i < compoundBody.parts.length; i++) {
     }
 }
 
-World.add(engine.world, bodyToAdd);
+let unionFind = new UnionFind(bodyToAdd);
+
+for (let i = 0; i < bodyToAdd.length; i++) {
+    for (let j = i + 1; j < bodyToAdd.length; j++) {
+        let result = shouldCombine(bodyToAdd[i].vertices, bodyToAdd[j].vertices, 1);
+        if (result) {
+            unionFind.union(i, j);
+        }
+    }
+}
+
+const group = new Map();
+for (let i = 0; i < bodyToAdd.length; i++) {
+    let root = unionFind.find(i);
+    if (group.get(root)) {
+        group.get(root).push(bodyToAdd[i]);
+    } else {
+        group.set(root, []);
+        group.get(root).push(bodyToAdd[i]);
+    }
+}
+const realBodyToAdd = [];
+console.log(group);
+group.forEach((value) => {
+    console.log("val", value);
+    let add = Matter.Body.create({
+        parts: value
+    });
+    realBodyToAdd.push(add);
+})
+World.add(engine.world, realBodyToAdd);
 });
 
+class UnionFind {
+    constructor(elements) {
+        this.count = elements.length;
+        this.parent = [];
+        for (let i = 0; i < this.count; i++) {
+            this.parent[i] = i;
+        }
+    }
+
+    union(a, b) {
+        let rootA = this.find(a);
+        let rootB = this.find(b);
+
+        if (rootA === rootB) return;
+
+        if (rootA < rootB) {
+            if (this.parent[b] != b) this.union(this.parent[b], a);
+            this.parent[b] = this.parent[a];
+        } else {
+            if (this.parent[a] != a) this.union(this.parent[a], b);
+            this.parent[a] = this.parent[b];
+        }
+    }
+
+    find(a) {
+        while (this.parent[a] !== a) {
+            a = this.parent[a];
+        }
+        return a;
+    }
+
+    connected(a, b) {
+        return this.find(a) === this.find(b);
+    }
+}
+
 function createBody(geometry) {
-    if (!geometry) {
-        return;
-    }
-    if (geometry[0].length < 4) {
-        console.log(geometry);
-        return;
-    }
-    points = [];
-    geometry[0].pop();
-    for (geo of geometry[0]) {
-        points.push({
-            x: geo[0],
-            y: geo[1],
-        })
-    }
-    console.log(points);
+    const points = geoJsonToVectors(geometry);
+    console.log(points, "point");
     return Bodies.fromVertices(Vertices.centre(points).x, Vertices.centre(points).y, points, {
         render: {fillStyle: 'blue'}
     });
@@ -119,8 +171,10 @@ function geoJsonToVectors(geometry) {
         return;
     }
 
-    const polygon = geometry[0];
-    return polygon.map(mapToVector).pop();
+    const polygon = geometry[0].slice();
+    polygon.pop();
+    const result = polygon.map(mapToVector);
+    return result;
 }
 
 function mapToVector(coord) {
@@ -130,6 +184,24 @@ function mapToVector(coord) {
     }
 
     return {x: coord[0], y: coord[1]};
+}
+
+function calculateDistance(point1, point2) {
+    let dx = point1.x - point2.x;
+    let dy = point1.y - point2.y;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+function shouldCombine(body1, body2, maxDistance) {
+    for (let i = 0; i < body1.length; i++) {
+        for (let j = 0; j < body2.length; j++) {
+            let distance = calculateDistance(body1[i], body2[j]);
+            if (distance <= maxDistance) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 Matter.Runner.run(engine);
