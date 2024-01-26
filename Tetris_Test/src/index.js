@@ -47,22 +47,28 @@ mouseConstraint = Matter.MouseConstraint.create(engine, {
 document.addEventListener('keydown', (e) => {
     const key = e.key;
     console.log(key);
+    let bodies = Composite.allBodies(engine.world).filter((body) => {
+        if (body.label === "line") {
+            return false;
+        } else if (body.label === "wall") {
+            return false;
+        }
+        return true;
+    });
+
     switch (key) {
         case 'c':
-            let bodies = Composite.allBodies(engine.world).filter((body) => {
-                if (body.label === "line") {
-                    return false;
-                } else if (body.label === "wall") {
-                    return false;
-                }
-                return true;
-            })
-            
             bodies.forEach((body) => {
                 removeLines(body);
             })
         
             console.log("len:", Composite.allBodies(engine.world).length);
+        case 'a':
+            let sum = 0;
+            bodies.forEach((body) => {
+                sum += calculateLineArea(body);
+            });
+            console.log(sum);
     }
 });
 World.add(engine.world, mouseConstraint);
@@ -200,6 +206,35 @@ function shouldCombine(body1, body2, maxDistance) {
         }
     }
     return false;
+}
+
+function calculateArea(vertices) {
+    const n = vertices.length;
+    let area = 0;
+
+    for (let i = 0; i < n; i++) {
+        const current = vertices[i];
+        const next = vertices[(i + 1) % n];
+        area += (current.x * next.y) - (next.x * current.y);
+    }
+
+    area = Math.abs(area) / 2;
+    return area;
+}
+
+function calculateLineArea(body) {
+    let sum = 0;
+    for (let i = 1; i < body.parts.length; i++) {
+        const part = body.parts[i];
+        const poly = verticesToGeometry(part);
+        const cut = Cutter.intersection(poly, line);
+        if (!cut) {
+            continue;
+        }
+        sum += calculateArea(geoJsonToVectors(cut[0]));
+    }
+
+    return sum;
 }
 
 function removeLines(body) {
