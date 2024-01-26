@@ -23,7 +23,7 @@ async function setupWebcam() {
 
 const mapWidth = 600;
 const mapHeight = 798;
-const blockSize = 32;
+const blockSize = 16;
 
 let activeBlock = null;
 let gameEnded = false; // 게임 종료 상태
@@ -246,13 +246,26 @@ Physics(function (world) {
           clearInterval(blockCreationInterval); // 블록 생성 중지
           alert("게임 종료: 천장에 충돌");
           activeBlock = null;
-        } else {
-          // 블록이 생성된 직후라면 충돌을 무시 (단, 천장과의 충돌은 예외)
-          if (activeBlock.justCreated) return;
-
-          console.log(`충돌 감지: 제어권 상실`);
-          activeBlock = null; // 액티브 블록이 충돌하면 제어권을 잃음
+          return;
         }
+        console.log(label);
+        if (label === "좌측 벽") {
+          console.log("좌측 벽과 충돌");
+          return;
+        }
+
+        if (label === "우측 벽") {
+          return;
+        }
+        
+        // 블록이 생성된 직후라면 충돌을 무시 (단, 천장과의 충돌은 예외)
+        if (activeBlock.justCreated) {
+          return;
+        }
+
+        console.log(`충돌 감지: 제어권 상실`);
+        activeBlock = null; // 액티브 블록이 충돌하면 제어권을 잃음
+        
       }
     });
   });
